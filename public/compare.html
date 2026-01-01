@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laptop Comparison</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 100%;
+      padding: 30px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 100px 20px;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .error {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      color: #856404;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .table-wrapper {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+      overflow-x: auto;
+      overflow-y: visible;
+      margin-bottom: 180px;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    .comparison-table thead {
+      background: #f8f9fa;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .comparison-table th {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .sticky-column {
+      position: sticky;
+      left: 0;
+      background: #f8f9fa !important;
+      z-index: 11;
+      min-width: 250px;
+      font-weight: 600;
+    }
+
+    .comparison-table tbody .sticky-column {
+      background: white !important;
+    }
+
+    .comparison-table tbody tr:hover {
+      background: #f9f9f9;
+    }
+
+    .laptop-name {
+      font-weight: 600;
+      color: #667eea;
+      margin-bottom: 8px;
+      font-size: 14px;
+      padding: 5px 0;
+    }
+
+    .delete-laptop-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: transparent;
+      border: 1px solid #dc3545;
+      color: #dc3545;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .delete-laptop-btn:hover {
+      background: #dc3545;
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .comparison-table th {
+      position: relative;
+    }
+
+    .add-laptop-column {
+      background: #f8f9fa;
+      min-width: 250px;
+      vertical-align: middle;
+    }
+
+    .add-laptop-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .new-laptop-input {
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: border-color 0.2s;
+    }
+
+    .new-laptop-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .btn-analyze {
+      padding: 8px 16px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-analyze:hover:not(:disabled) {
+      background: #5568d3;
+      transform: translateY(-1px);
+    }
+
+    .btn-analyze:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .add-laptop-cell {
+      background: #f8f9fa;
+      border-left: 2px solid #e0e0e0;
+    }
+
+    .add-laptop-empty-state {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      margin-top: 20px;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+      text-align: center;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .add-laptop-empty-state h3 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 18px;
+    }
+
+    .add-laptop-empty-state .add-laptop-container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .spec-link {
+      color: #667eea;
+      text-decoration: none;
+      transition: all 0.2s;
+      border-bottom: 1px dashed #667eea;
+    }
+
+    .spec-link:hover {
+      color: #5568d3;
+      border-bottom-style: solid;
+    }
+
+    .gpu-label {
+      font-weight: 700;
+      color: #333;
+      background: #f8f9fa;
+    }
+
+    .gpu-info {
+      font-weight: 600;
+      color: #667eea;
+      background: #f8f9fa;
+      padding: 12px 15px !important;
+    }
+
+    .gpu-review-link {
+      color: #667eea;
+      text-decoration: none;
+      transition: all 0.2s;
+      border-bottom: 2px solid #667eea;
+      font-weight: 600;
+    }
+
+    .gpu-review-link:hover {
+      color: #5568d3;
+      border-bottom-color: #5568d3;
+      background: rgba(102, 126, 234, 0.1);
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    .product-link {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+
+    .product-link:hover {
+      color: #5568d3;
+      border-bottom-color: #5568d3;
+    }
+
+    .spec-label {
+      font-weight: 600;
+      color: #555;
+      background: #fafafa;
+      font-size: 13px;
+    }
+
+    .spec-value {
+      font-size: 13px;
+      color: #333;
+      padding: 10px 15px !important;
+    }
+
+    .price-value {
+      font-weight: 700;
+      color: #28a745;
+      font-size: 14px;
+    }
+
+    .category-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      color: white;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 12px;
+    }
+
+    .benchmark-name {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .score-value {
+      font-weight: 600;
+      color: #4caf50;
+    }
+
+    .score-missing {
+      color: #999;
+      font-style: italic;
+    }
+
+    .actions {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: white;
+      color: #667eea;
+      border: 2px solid #667eea;
+    }
+
+    .btn-secondary:hover {
+      background: #f0f0f0;
+      transform: translateY(-2px);
+    }
+
+    .add-row {
+      background: #f8f9fa !important;
+      position: relative;
+    }
+
+    .add-row td {
+      padding: 12px 15px !important;
+      vertical-align: top;
+      border-bottom: 1px solid #e0e0e0;
+      overflow: visible;
+      position: relative;
+    }
+
+    .add-row .sticky-column {
+      position: sticky;
+      left: 0;
+      background: #f8f9fa !important;
+      z-index: 12;
+    }
+
+    .add-control-inline {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .autocomplete-wrapper {
+      position: relative;
+      display: flex;
+      flex: 1;
+      align-items: stretch;
+    }
+
+    .autocomplete-input-inline {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px 0 0 4px;
+      border-right: none;
+      font-size: 12px;
+      transition: border-color 0.2s;
+      min-width: 150px;
+    }
+
+    .autocomplete-input-inline:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .dropdown-toggle {
+      width: 28px;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 0 4px 4px 0;
+      color: #667eea;
+      font-size: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: 0;
+    }
+
+    .dropdown-toggle:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-add-inline {
+      width: 28px;
+      height: 28px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .btn-add-inline:hover {
+      background: #5568d3;
+      transform: scale(1.05);
+    }
+
+    .suggestions-inline {
+      position: fixed;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      margin-top: 2px;
+      max-height: 200px;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      z-index: 9999;
+      min-width: 200px;
+      display: none;
+    }
+
+    .suggestion-item {
+      padding: 8px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.15s;
+    }
+
+    .suggestion-item:hover:not(.no-results) {
+      background: #f5f7fa;
+    }
+
+    .suggestion-item:not(:last-child) {
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .suggestion-item.no-results {
+      color: #999;
+      font-style: italic;
+      cursor: default;
+    }
+
+    .visible-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .remove-btn-inline {
+      background: transparent;
+      border: 1px solid #dc3545;
+      color: #dc3545;
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      margin-left: 8px;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      vertical-align: middle;
+    }
+
+    .remove-btn-inline:hover {
+      background: #dc3545;
+      color: white;
+    }
+
+    .benchmark-name {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .game-settings {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .setting-item {
+      font-size: 12px;
+      display: block;
+    }
+
+    .setting-item strong {
+      color: #667eea;
+      font-weight: 600;
+      min-width: 35px;
+      display: inline-block;
+      font-size: 11px;
+    }
+
+    .fps-value {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .remove-tag {
+      background: rgba(255, 255, 255, 0.3);
+      border: none;
+      color: white;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .remove-tag:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Laptop Comparison</h1>
+    <p>Side-by-side comparison of laptop benchmarks and gaming performance</p>
+  </div>
+
+  <div class="container">
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="clearComparison()">Clear All</button>
+      <button class="btn btn-primary" onclick="exportToCSV()">Export CSV</button>
+    </div>
+
+    <div id="content">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading laptop data...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/compare.js"></script>
+</body>
+</html>
