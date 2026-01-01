@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Router } from 'express';
 import axios from 'axios';
 import { extractProductFromURL } from '../lib/gemini.js';
 import {
@@ -10,7 +10,7 @@ import {
   cacheCPUBenchmark
 } from '../lib/supabase.js';
 
-const analyzeRoute = new Hono();
+const analyzeRouter = Router();
 
 /**
  * Helper function to detect if GPU is integrated
@@ -311,19 +311,19 @@ function populateGPUBenchmarks(responseData, gpuName, finalGpuName, isIntegrated
  * POST /api/analyze/laptop
  * Complete laptop analysis: Takes product URL and returns both product info and GPU benchmarks
  */
-analyzeRoute.post('/analyze/laptop', async (c) => {
+analyzeRouter.post('/analyze/laptop', async (req, res) => {
   try {
-    const { url } = await c.req.json();
+    const { url } = req.body;
 
     if (!url) {
-      return c.json({ error: 'URL is required' }, 400);
+      return res.status(400).json({ error: 'URL is required' });
     }
 
     // Validate URL
     try {
       new URL(url);
     } catch {
-      return c.json({ error: 'Invalid URL format' }, 400);
+      return res.status(400).json({ error: 'Invalid URL format' });
     }
 
     console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
@@ -391,14 +391,14 @@ analyzeRoute.post('/analyze/laptop', async (c) => {
     }
 
     // Single return statement at the end
-    return c.json(responseData);
+    return res.json(responseData);
   } catch (error) {
     console.error('Complete laptop analysis error:', error);
-    return c.json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to analyze laptop',
       message: error.message
-    }, 500);
+    });
   }
 });
 
@@ -406,4 +406,4 @@ analyzeRoute.post('/analyze/laptop', async (c) => {
 
 
 
-export { analyzeRoute };
+export { analyzeRouter };

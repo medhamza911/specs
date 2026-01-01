@@ -1,43 +1,39 @@
-import { Hono } from 'hono';
-import { serve } from '@hono/node-server';
-import { serveStatic } from '@hono/node-server/serve-static';
-import { cors } from 'hono/cors';
+import express from 'express';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { analyzeRoute } from './routes/analyze.js';
+import { analyzeRouter } from './routes/analyze.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 dotenv.config();
 
-const app = new Hono();
+const app = express();
 
 // Middleware
-app.use('/*', cors());
-app.use('/public/*', serveStatic({ root: './' }));
-app.use('/js/*', serveStatic({ root: './public' }));
+app.use(cors());
+app.use(express.json());
+app.use('/public', express.static(join(__dirname, '..', 'public')));
+app.use('/js', express.static(join(__dirname, '..', 'public', 'js')));
 
 // Routes
-app.get('/', (c) => {
+app.get('/', (req, res) => {
   const htmlPath = join(__dirname, '..', 'public', 'compare.html');
   const html = readFileSync(htmlPath, 'utf-8');
-  return c.html(html);
+  res.send(html);
 });
 
 // API Routes
-app.route('/api', analyzeRoute);
+app.use('/api', analyzeRouter);
 
 // Start server
 const port = process.env.PORT || 3000;
 
-console.log(`🚀 Server running at http://localhost:${port}`);
-
-serve({
-  fetch: app.fetch,
-  port: port
+app.listen(port, () => {
+  console.log(`🚀 Server running at http://localhost:${port}`);
 });
 
 export default app;
