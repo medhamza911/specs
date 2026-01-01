@@ -26,6 +26,10 @@ app.get('/', (req, res) => {
   res.send(html);
 });
 
+app.get('/favicon.ico', (req, res) => {
+  res.redirect('/public/favicon.svg');
+});
+
 // API Routes
 app.use('/api', analyzeRouter);
 
